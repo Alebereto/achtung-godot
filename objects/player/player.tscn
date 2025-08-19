@@ -17,6 +17,8 @@ script = ExtResource("1_g7ett")
 [node name="HeadRoot" type="Node2D" parent="."]
 
 [node name="Head" type="Area2D" parent="HeadRoot"]
+collision_layer = 3
+collision_mask = 7
 input_pickable = false
 
 [node name="Nose" type="Sprite2D" parent="HeadRoot/Head"]
@@ -24,36 +26,28 @@ position = Vector2(380, 0)
 scale = Vector2(0.97, 0.275)
 texture = ExtResource("2_jnjyq")
 
-[node name="Circle" type="CollisionShape2D" parent="HeadRoot/Head"]
-z_index = 1
-shape = SubResource("CircleShape2D_ssrue")
-
-[node name="HeadSprite" type="Sprite2D" parent="HeadRoot/Head/Circle"]
+[node name="HeadSprite" type="Sprite2D" parent="HeadRoot/Head"]
 modulate = Color(1, 1, 0, 1)
 z_index = -1
 texture = ExtResource("2_ssrue")
 
+[node name="Circle" type="CollisionShape2D" parent="HeadRoot/Head"]
+z_index = 1
+shape = SubResource("CircleShape2D_ssrue")
+
 [node name="Square" type="CollisionShape2D" parent="HeadRoot/Head"]
-process_mode = 4
-visible = false
 z_index = 1
 shape = SubResource("RectangleShape2D_ssrue")
 disabled = true
-
-[node name="HeadSprite" type="Sprite2D" parent="HeadRoot/Head/Square"]
-modulate = Color(1, 1, 0, 1)
-z_index = -1
-texture = ExtResource("2_jnjyq")
 
 [node name="TrailRoot" type="Node2D" parent="."]
 z_index = -2
 
 [node name="TrailCollisions" type="Area2D" parent="TrailRoot"]
 z_index = 1
+collision_layer = 3
 collision_mask = 0
 input_pickable = false
 monitoring = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="TrailRoot/TrailCollisions"]
 
 [node name="Lines" type="Node2D" parent="TrailRoot"]
