@@ -1,16 +1,17 @@
-[gd_scene load_steps=5 format=3 uid="uid://qt8vbfe7jkfe"]
+[gd_scene load_steps=6 format=3 uid="uid://qt8vbfe7jkfe"]
 
 [ext_resource type="Script" uid="uid://jekdcd20cvbh" path="res://scenes/game/game.gd" id="1_p5s82"]
 [ext_resource type="Script" uid="uid://bt15x0oqamq4b" path="res://scenes/game/arena.gd" id="2_3u5k5"]
 [ext_resource type="PackedScene" uid="uid://bj3vnstv5q1tk" path="res://objects/player/player.tscn" id="3_hc577"]
 [ext_resource type="Script" uid="uid://bntrabmmlm7ly" path="res://scenes/game/pause_menu.gd" id="4_kelw5"]
+[ext_resource type="PackedScene" uid="uid://bykgerl3pq2uv" path="res://objects/powerups/powerup.tscn" id="4_lfrn8"]
 
 [node name="Game" type="Node2D"]
 process_mode = 3
 script = ExtResource("1_p5s82")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.395, 0.395)
+zoom = Vector2(0.086, 0.086)
 
 [node name="Arena" type="Node2D" parent="."]
 process_mode = 1
@@ -19,15 +20,17 @@ script = ExtResource("2_3u5k5")
 [node name="Players" type="Node2D" parent="Arena"]
 
 [node name="Fred" parent="Arena/Players" instance=ExtResource("3_hc577")]
-scale = Vector2(0.1, 0.1)
-_speed = 30.0
+position = Vector2(-3722, 986)
 
 [node name="Bluebell" parent="Arena/Players" instance=ExtResource("3_hc577")]
-position = Vector2(345.6, 0)
-scale = Vector2(0.1, 0.1)
-_player_id = 2
-trail_color = Color(0, 0, 1, 1)
-_speed = 30.0
+position = Vector2(-5110, -2159)
+_edit_trail_color = Color(0.404949, 0.465398, 1, 1)
+player_id = 2
+
+[node name="Powerups" type="Node2D" parent="Arena"]
+
+[node name="Powerup" parent="Arena/Powerups" instance=ExtResource("4_lfrn8")]
+position = Vector2(-1080, -547)
 
 [node name="PauseMenu" type="Control" parent="."]
 process_mode = 2

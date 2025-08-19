@@ -7,3 +7,6 @@ func _ready() -> void:
 	return
 
 
+func _create_players():
+	return
+
