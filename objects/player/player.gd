@@ -271,6 +271,29 @@ func set_default_values() -> void:
 	_new_hole_delay()
 	_trail_on()
 
+func apply_power(power_id) -> void:
+	match power_id as Powerup.POWER:
+		Powerup.POWER.FAST:
+			set_speed(_speed * 1.4)
+		Powerup.POWER.SLOW:
+			set_speed(_speed * 0.6)
+		Powerup.POWER.WIDE:
+			set_width(_width *1.4)
+		Powerup.POWER.THIN:
+			set_width(_width * 0.6)
+		Powerup.POWER.SQUARE:
+			set_form(PLAYER_FORMS.SQUARE)
+		Powerup.POWER.CLEAR_TRAIL:
+			delete_trail()
+		Powerup.POWER.INVINCIBLE:
+			_trail_off()
+			_invincible = true
+		Powerup.POWER.REVERSE:
+			_reversed = true
+			_head_sprite.modulate = player_settings.reverse_color
+		Powerup.POWER.LOOP:
+			return
+
 ## Deletes all of the player's trail
 func delete_trail() -> void:
 	_current_line = null
