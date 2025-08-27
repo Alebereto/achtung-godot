@@ -8,13 +8,24 @@ const POWERUP_SCENE: PackedScene = preload("res://objects/powerups/powerup.tscn"
 
 @onready var _players_root: Node2D = $Players
 @onready var _powerups_root: Node2D = $Powerups
+@onready var _walls: Node2D = $Walls
 
-var arena_width: float = 1400.0
-var arena_height: float = 1400.0
-var border_width: float = 10.0
+@export var arena_width: float = 1400.0:
+	set(value):
+		arena_width = value
+		_walls.set_size(arena_width, arena_height, border_width)
+@export var arena_height: float = 1400.0:
+	set(value):
+		arena_height = value
+		_walls.set_size(arena_width, arena_height, border_width)
+@export var border_width: float = 10.0:
+	set(value):
+		border_width = value
+		_walls.set_size(arena_width, arena_height, border_width)
 
 func _ready() -> void:
 	_connect_signals()
+	_walls.set_size(arena_width, arena_height, border_width)
 
 ## Connects existing players and powerup signals to arena. used for editor
 func _connect_signals() -> void:

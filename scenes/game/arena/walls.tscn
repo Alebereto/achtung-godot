@@ -1,0 +1,57 @@
+[gd_scene load_steps=6 format=3 uid="uid://6b385ko02t4i"]
+
+[ext_resource type="Script" uid="uid://bjfhkeqx382dr" path="res://scenes/game/arena/walls.gd" id="1_2551y"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_lfrn8"]
+normal = Vector2(1, 0)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_hb47g"]
+normal = Vector2(0, 1)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_8xe32"]
+normal = Vector2(-1, 0)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_2551y"]
+
+[node name="Walls" type="Node2D"]
+script = ExtResource("1_2551y")
+
+[node name="Left" type="Area2D" parent="."]
+collision_mask = 0
+input_pickable = false
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Left"]
+shape = SubResource("WorldBoundaryShape2D_lfrn8")
+debug_color = Color(0, 0.558893, 0.652616, 0.42)
+
+[node name="Up" type="Area2D" parent="."]
+collision_mask = 0
+input_pickable = false
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Up"]
+shape = SubResource("WorldBoundaryShape2D_hb47g")
+debug_color = Color(0, 0.558893, 0.652616, 0.42)
+
+[node name="Right" type="Area2D" parent="."]
+collision_mask = 0
+input_pickable = false
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Right"]
+shape = SubResource("WorldBoundaryShape2D_8xe32")
+debug_color = Color(0, 0.558893, 0.652616, 0.42)
+
+[node name="Down" type="Area2D" parent="."]
+collision_mask = 0
+input_pickable = false
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Down"]
+shape = SubResource("WorldBoundaryShape2D_2551y")
+debug_color = Color(0, 0.558893, 0.652616, 0.42)
+
+[node name="Line2D" type="Line2D" parent="."]
+closed = true
+default_color = Color(1, 1, 0, 1)
