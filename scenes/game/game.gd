@@ -1,5 +1,8 @@
 extends Node2D
 
+@export_range(1,10) var _player_count: int = 2
+
+@onready var _arena: Node2D = $Arena
 @onready var _pause_menu: Control = $PauseMenu
 
 

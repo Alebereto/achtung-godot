@@ -6,24 +6,24 @@ signal crashed(crasher_id: int, obstacle_id: int, is_player: bool)
 # Player settings used for editor only
 @export_group("Player Settings")
 @export_color_no_alpha var _edit_trail_color: Color = Color.RED
-@export_range(0.0, 5000.0) var _edit_default_speed: float = 1500.0
-@export_range(1.0, 1000.0) var _edit_default_width: float = 256.0
-@export_range(0.0, 10.0) var _edit_default_turn: float = 2.5
+@export_range(0.0, 1500.0) var _edit_default_speed: float = 148.0
+@export_range(1.0, 1000.0) var _edit_default_width: float = 10.0
+@export_range(0.0, 10.0) var _edit_default_turn: float = 2.9
 @export var _edit_default_form: PLAYER_FORMS = PLAYER_FORMS.NORMAL
 @export_group("")
 
 class Settings:
 	const HOLE_DELAY := 3.5
-	const HOLE_LENGTH := 500.0
+	const HOLE_LENGTH := 32.0
 
 	var name: String = "P"
 	var trail_color: Color = Color.RED
 	var default_head_color: Color = Color.YELLOW
 	var reverse_color: Color = Color.BLUE
 
-	var default_speed: float = 1000.0
-	var default_width: float = 256.0
-	var default_turn_sharpness: float = 2.0
+	var default_speed: float = 148.0
+	var default_width: float = 10.0
+	var default_turn_sharpness: float = 2.5
 	var default_player_from: PLAYER_FORMS = PLAYER_FORMS.NORMAL
 
 enum PLAYER_FORMS{NORMAL, SQUARE}
@@ -37,8 +37,8 @@ enum PLAYER_FORMS{NORMAL, SQUARE}
 const CIRCLE_TEXTURE = preload("res://assets/sprites/player/circle.png")
 const SQUARE_TEXTURE = preload("res://assets/sprites/player/square.png")
 
-const SAFE_SELF_PERIOD = 0.1
-const SPRITE_WIDTH = 256.0
+const SAFE_SELF_PERIOD = 0.2
+const SPRITE_WIDTH = 32.0
 
 # inputs
 var _left_pressed: bool = false
@@ -230,6 +230,9 @@ func _trail_off() -> void:
 	_current_line = null
 
 
+func _update_grace_stamp() -> void:
+	_grace_period_stamp = _time_alive
+
 # Public functions
 # ================
 
@@ -267,8 +270,9 @@ func die() -> void:
 func set_width(w: float, grace: bool = false) -> void:
 	_width = w
 	_start_line(true) # update current line
-	if grace: _grace_period_stamp = _time_alive
-	#TODO: scale head
+	if grace: _update_grace_stamp()
+	var head_scale = _width / SPRITE_WIDTH
+	_head.scale = Vector2(head_scale, head_scale)
 
 ## Sets player's speed
 func set_speed(s: float) -> void:
@@ -279,6 +283,9 @@ func set_form(player_form: PLAYER_FORMS) -> void:
 	# Disable all collision shapes
 	_head.find_child("Circle").set_deferred("disabled", true)
 	_head.find_child("Square").set_deferred("disabled", true)
+	# update grace period when collision shape changes
+	_update_grace_stamp()
+
 	# Turn on new form collision and change sprite
 	match player_form:
 		PLAYER_FORMS.NORMAL:
@@ -309,8 +316,8 @@ func _on_collision(_area_RID, area: Area2D, area_shape_index: int, _lsi) -> void
 			var crashed_on_trail: bool = other_shape.has_meta("time")
 			# if crash should not kill
 			if (other_id == player_id and crashed_on_trail and (
-				(_time_alive - other_shape.get_meta("time") < SAFE_SELF_PERIOD) or
-				(_time_alive - _grace_period_stamp < SAFE_SELF_PERIOD))):
+				(_time_alive - other_shape.get_meta("time") <= SAFE_SELF_PERIOD) or
+				(_time_alive - _grace_period_stamp <= SAFE_SELF_PERIOD))):
 				return
 			die()
 			crashed.emit(player_id, other_id, not crashed_on_trail)
