@@ -31,7 +31,7 @@ enum PLAYER_FORMS{NORMAL, SQUARE}
 @onready var _head_root: Node2D = $HeadRoot
 @onready var _head: Area2D = $HeadRoot/Head
 @onready var _head_sprite: Sprite2D = $HeadRoot/Head/HeadSprite
-@onready var _trail_collisions: Area2D = $TrailRoot/TrailCollisions
+@onready var _trail_collisions: Area2D = null
 @onready var _trail_lines_root: Node2D = $TrailRoot/Lines
 
 const CIRCLE_TEXTURE = preload("res://assets/sprites/player/circle.png")
@@ -100,7 +100,7 @@ var _current_hole_length: float = 0
 
 
 func _ready() -> void:
-	_trail_collisions.set_meta("id", player_id)
+	_reset_trail_root()
 	_head.set_meta("id", player_id)
 	_head.area_shape_entered.connect(_on_collision)
 
@@ -123,6 +123,25 @@ func _process(delta: float) -> void:
 			var movement_vec = _move(delta)
 			if _leaves_trail: _leave_trail(delta, movement_vec)
 
+
+func _reset_trail_root() -> void:
+	if _trail_collisions: _trail_collisions.queue_free()
+	if _trail_lines_root: _trail_lines_root.queue_free()
+	# Collisions
+	_trail_collisions = Area2D.new()
+	_trail_collisions.name = "TrailCollisions"
+	_trail_collisions.collision_mask = 0
+	_trail_collisions.collision_layer = 3
+	_trail_collisions.monitoring = false
+	_trail_collisions.input_pickable = false
+	_trail_collisions.set_meta("id", player_id)
+	$TrailRoot.add_child(_trail_collisions)
+	# Lines
+	_trail_lines_root.queue_free()
+	_trail_lines_root = Node2D.new()
+	_trail_lines_root.name = "TrailRoot"
+	_trail_lines_root.z_index = -1
+	$TrailRoot.add_child(_trail_lines_root)
 
 
 ## Moves player according to delta time,
@@ -255,12 +274,8 @@ func set_default_values() -> void:
 ## Deletes all of the player's trail
 func delete_trail() -> void:
 	_current_line = null
-	_start_line(true)
-	#TODO: correctly (if currently placing trail, start new line)
-	for collision in _trail_collisions:
-		collision.queue_free()
-	for line in _trail_lines_root:
-		line.queue_free()
+	_reset_trail_root()
+
 
 ## Kills player
 func die() -> void:
