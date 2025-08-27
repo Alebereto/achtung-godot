@@ -22,10 +22,8 @@ script = ExtResource("2_3u5k5")
 [node name="Players" type="Node2D" parent="Arena"]
 
 [node name="Fred" parent="Arena/Players" instance=ExtResource("3_hc577")]
-position = Vector2(-541, 166)
 
 [node name="Bluebell" parent="Arena/Players" instance=ExtResource("3_hc577")]
-position = Vector2(-480, -305)
 _edit_trail_color = Color(0.404949, 0.465398, 1, 1)
 player_id = 2
 

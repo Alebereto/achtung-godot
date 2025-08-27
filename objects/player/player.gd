@@ -335,6 +335,8 @@ func set_form(player_form: PLAYER_FORMS) -> void:
 	# update line after change form
 	_start_line(true)
 
+func is_alive() -> bool: return _alive
+
 # Signal calls
 # ============
 

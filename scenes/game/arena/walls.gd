@@ -20,6 +20,9 @@ extends Node2D
 @onready var _right: Area2D = $Right
 @onready var _down: Area2D = $Down
 
+func _ready() -> void:
+	_update_sizes()
+
 func _update_sizes() -> void:
 	_line.clear_points()
 	_line.width = wall_width
