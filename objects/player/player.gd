@@ -47,7 +47,7 @@ var _right_pressed: bool = false
 
 # Player info
 # ===========
-@export var player_id: int = 1
+@export var player_id: int = 0
 var player_settings: Settings = null
 
 # time player has been alive
@@ -123,6 +123,9 @@ func _process(delta: float) -> void:
 			var movement_vec = _move(delta)
 			if _leaves_trail: _leave_trail(delta, movement_vec)
 
+func _crash(other_id: int, is_head: bool) -> void:
+	die()
+	crashed.emit(player_id, other_id, is_head)
 
 func _reset_trail_root() -> void:
 	if _trail_collisions: _trail_collisions.queue_free()
@@ -248,7 +251,6 @@ func _trail_off() -> void:
 	_leaves_trail = false
 	_current_line = null
 
-
 func _update_grace_stamp() -> void:
 	_grace_period_stamp = _time_alive
 
@@ -354,24 +356,21 @@ func _on_collision(_area_RID, area: Area2D, area_shape_index: int, _lsi) -> void
 			var other_id: int = area.get_meta("id")
 			var other_shape: CollisionShape2D = area.shape_owner_get_owner(area.shape_find_owner(area_shape_index))
 			var crashed_on_trail: bool = other_shape.has_meta("time")
-			# if crash should not kill
-			if (other_id == player_id and crashed_on_trail and (
+			# check if collision should kill
+			if not (other_id == player_id and crashed_on_trail and (
 				(_time_alive - other_shape.get_meta("time") <= SAFE_SELF_PERIOD) or
 				(_time_alive - _grace_period_stamp <= SAFE_SELF_PERIOD))):
-				return
-			die()
-			crashed.emit(player_id, other_id, not crashed_on_trail)
+				_crash(other_id, not crashed_on_trail)
 		else:
-			die()
-			crashed.emit(player_id, -1, false)
+			_crash(-1, false)
 
 # Player inputs
 # =============
 
 ## Read current inputs
 func _get_inputs() -> void:
-	_left_pressed = Input.is_action_pressed("p%d_left" %player_id)
-	_right_pressed = Input.is_action_pressed("p%d_right" %player_id)
+	_left_pressed = Input.is_action_pressed("p%d_left" %(player_id+1))
+	_right_pressed = Input.is_action_pressed("p%d_right" %(player_id+1))
 
 ## Handle inputs
 func _unhandled_input(event: InputEvent) -> void:
@@ -379,8 +378,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if _current_form == PLAYER_FORMS.SQUARE:
 		var turn_direction = 0
-		if event.is_action_pressed("p%d_left" %player_id, false): turn_direction = -1
-		elif event.is_action_pressed("p%d_right" %player_id, false): turn_direction = 1
+		if event.is_action_pressed("p%d_left" %(player_id+1), false): turn_direction = -1
+		elif event.is_action_pressed("p%d_right" %(player_id+1), false): turn_direction = 1
 		else: return
 
 		if _reversed: turn_direction *= -1

@@ -24,15 +24,16 @@ script = ExtResource("2_3u5k5")
 [node name="Fred" parent="Arena/Players" instance=ExtResource("3_hc577")]
 
 [node name="Bluebell" parent="Arena/Players" instance=ExtResource("3_hc577")]
+position = Vector2(-1, 0)
 _edit_trail_color = Color(0.404949, 0.465398, 1, 1)
-player_id = 2
+player_id = 1
 
 [node name="Powerups" type="Node2D" parent="Arena"]
 z_index = -10
 
-[node name="Square" parent="Arena/Powerups" instance=ExtResource("4_lfrn8")]
+[node name="Fast" parent="Arena/Powerups" instance=ExtResource("4_lfrn8")]
 position = Vector2(177, -222)
-power_id = 4
+power_type = 1
 
 [node name="Walls" parent="Arena" instance=ExtResource("5_5i0tg")]
 
