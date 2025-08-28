@@ -1,7 +1,6 @@
 extends Node2D
 
 signal player_crashed(player_id)
-signal round_ended(winner_id)
 
 const PLAYER_SCENE: PackedScene = preload("res://objects/player/player.tscn")
 const POWERUP_SCENE: PackedScene = preload("res://objects/powerups/powerup.tscn")
@@ -34,7 +33,7 @@ var frozen: bool = false:
 func _ready() -> void:
 	_connect_signals()
 	_walls.set_size(arena_width, arena_height, border_width)
-	new_round()
+
 
 ## Connects existing players and powerup signals to arena. used for editor
 func _connect_signals() -> void:
@@ -76,12 +75,16 @@ func _clear_powerups() -> void:
 # ===============
 
 func new_game() -> void:
-	_clear_players()
-	_clear_powerups()
+	#_clear_players()
+	# TODO: create new players 
+	return
 
 func new_round() -> void:
+	#_clear_powerups()
+
+	# For each player: return to default state and
+	# give random location and rotation.
 	var rng := RandomNumberGenerator.new()
-	_clear_powerups()
 	var lr := arena_width/2.0 - 90
 	var ud := arena_height/2.0 - 90
 	for player in _players_root.get_children():
@@ -91,27 +94,16 @@ func new_round() -> void:
 			player.head_position = Vector2(rng.randf_range(-lr, lr),
 										   rng.randf_range(-ud, ud)) 
 			player.head_angle = rng.randf_range(0, 2*PI)
+	# freeze at start of round
 	frozen = true
 
-func toggle_freeze() -> void:
-	frozen = not frozen
+func toggle_freeze() -> void: frozen = not frozen
 
 # Signal calls
 # ============
 
-func _on_player_crash(crasher_id: int, obstacle_id: int, is_player: bool):
-	print(_get_player_from_id(crasher_id).name + " crashed!!!")
-
+func _on_player_crash(crasher_id: int, _obstacle_id: int, _is_player: bool):
 	player_crashed.emit(crasher_id)
-
-	# Check if round ended
-	var live_count := 0
-	var alive_id: int = -1
-	for player in _players_root.get_children():
-		if player is Player and player.is_alive():
-			live_count += 1
-			alive_id = player.player_id
-	if live_count <= 1: round_ended.emit(-1)
 
 func _on_powerup_obtain(player_id: int, power_id, power_type):
 	match power_type as Powerup.TYPE:
