@@ -3,9 +3,9 @@
 [ext_resource type="Script" uid="uid://jekdcd20cvbh" path="res://scenes/game/game.gd" id="1_p5s82"]
 [ext_resource type="Script" uid="uid://bt15x0oqamq4b" path="res://scenes/game/arena/arena.gd" id="2_3u5k5"]
 [ext_resource type="PackedScene" uid="uid://bj3vnstv5q1tk" path="res://objects/player/player.tscn" id="3_hc577"]
-[ext_resource type="Script" uid="uid://bntrabmmlm7ly" path="res://scenes/game/pause_menu.gd" id="4_kelw5"]
 [ext_resource type="PackedScene" uid="uid://bykgerl3pq2uv" path="res://objects/powerups/powerup.tscn" id="4_lfrn8"]
 [ext_resource type="PackedScene" uid="uid://6b385ko02t4i" path="res://scenes/game/arena/walls.tscn" id="5_5i0tg"]
+[ext_resource type="Script" uid="uid://bntrabmmlm7ly" path="res://scenes/game/pause_menu/pause_menu.gd" id="6_5i0tg"]
 
 [node name="Game" type="Node2D"]
 process_mode = 3
@@ -44,4 +44,4 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
-script = ExtResource("4_kelw5")
+script = ExtResource("6_5i0tg")
