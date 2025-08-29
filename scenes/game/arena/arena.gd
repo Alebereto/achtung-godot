@@ -56,8 +56,8 @@ func _get_player_from_id(player_id: int) -> Player:
 ## Add a powerup to the arena with given values
 func _add_powerup(power_id, power_type, pos: Vector2 = Vector2.ZERO) -> void:
 	var powerup = POWERUP_SCENE.instantiate()
-	powerup.power_id = power_id as Powerup.POWER
-	powerup.power_type = power_type as Powerup.TYPE
+	powerup.power_id = power_id as Powerup.Power
+	powerup.power_type = power_type as Powerup.Type
 	powerup.position = pos
 	powerup.obtained.connect(_on_powerup_obtain, CONNECT_ONE_SHOT)
 
@@ -106,15 +106,15 @@ func _on_player_crash(crasher_id: int, _obstacle_id: int, _is_player: bool):
 	player_crashed.emit(crasher_id)
 
 func _on_powerup_obtain(player_id: int, power_id, power_type):
-	match power_type as Powerup.TYPE:
-		Powerup.TYPE.ALL:
+	match power_type as Powerup.Type:
+		Powerup.Type.ALL:
 			for player in _players_root.get_children():
 				if player is Player: player.apply_power(power_id)
-		Powerup.TYPE.OTHERS:
+		Powerup.Type.OTHERS:
 			for player in _players_root.get_children():
 				if player is Player and player.player_id != player_id:
 					player.apply_power(power_id)
-		Powerup.TYPE.SELF:
+		Powerup.Type.SELF:
 			for player in _players_root.get_children():
 				if player is Player and player.player_id == player_id:
 					player.apply_power(power_id)

@@ -1,13 +1,13 @@
 @tool
 class_name Powerup extends Area2D
 
-signal obtained(player_id: int, power_id: POWER, power_type: TYPE)
+signal obtained(player_id: int, power_id: Power, power_type: Type)
 
 
-enum TYPE{ALL, SELF, OTHERS}
+enum Type {ALL, SELF, OTHERS}
 const TYPE_COLOR: Array[Color] = [Color.BLUE, Color.GREEN, Color.RED]
 
-enum POWER{FAST, SLOW, WIDE, THIN, SQUARE,
+enum Power {FAST, SLOW, WIDE, THIN, SQUARE,
 			CLEAR_TRAIL, INVINCIBLE, REVERSE, LOOP, SCRAMBLE}
 const POWER_NAMES := ["fast", "slow", "wide", "thin", "square",
 					"clear_trail", "invincible", "reverse", "loop", "scramble"]
@@ -17,13 +17,13 @@ const SPRITES_DIR: String = "res://assets/sprites/powerups/"
 @onready var circle_sprite: Sprite2D = $Circle
 @onready var power_sprite: Sprite2D = $Power
 
-@export var power_type: TYPE:
+@export var power_type: Type:
 	set(value):
-		power_type = value as TYPE
+		power_type = value as Type
 		if Engine.is_editor_hint(): _ready()
-@export var power_id: POWER:
+@export var power_id: Power:
 	set(value):
-		power_id = value as POWER
+		power_id = value as Power
 		if Engine.is_editor_hint(): _ready()
 
 func _ready() -> void:

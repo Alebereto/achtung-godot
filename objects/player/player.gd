@@ -9,14 +9,14 @@ signal crashed(crasher_id: int, obstacle_id: int, is_player: bool)
 @export_range(0.0, 1500.0) var _edit_default_speed: float = 148.0
 @export_range(1.0, 1000.0) var _edit_default_width: float = 10.0
 @export_range(0.0, 10.0) var _edit_default_turn: float = 2.9
-@export var _edit_default_form: PLAYER_FORMS = PLAYER_FORMS.NORMAL
+@export var _edit_default_form: PlayerFroms = PlayerFroms.NORMAL
 @export_group("")
 
 class Settings:
 	const HOLE_DELAY := 3.5
 	const HOLE_LENGTH := 32.0
 
-	var name: String = "P"
+	var name: String = "Player"
 	var trail_color: Color = Color.RED
 	var default_head_color: Color = Color.YELLOW
 	var reverse_color: Color = Color.BLUE
@@ -24,9 +24,9 @@ class Settings:
 	var default_speed: float = 148.0
 	var default_width: float = 10.0
 	var default_turn_sharpness: float = 2.5
-	var default_player_from: PLAYER_FORMS = PLAYER_FORMS.NORMAL
+	var default_player_from: PlayerFroms = PlayerFroms.NORMAL
 
-enum PLAYER_FORMS{NORMAL, SQUARE}
+enum PlayerFroms {NORMAL, SQUARE}
 
 @onready var _head_root: Node2D = $HeadRoot
 @onready var _head: Area2D = $HeadRoot/Head
@@ -67,7 +67,7 @@ var _width: float
 var _turn_sharpness: float
 
 # current form of the player
-var _current_form: PLAYER_FORMS = PLAYER_FORMS.NORMAL
+var _current_form: PlayerFroms = PlayerFroms.NORMAL
 # true if player is alive
 var _alive: bool = true
 # true if player leaves a trail
@@ -151,7 +151,7 @@ func _reset_trail_root() -> void:
 ## returns Vector2 of the movement relative to previous position
 func _move(delta: float) -> Vector2:
 	# If normal mode then turn
-	if _current_form == PLAYER_FORMS.NORMAL:
+	if _current_form == PlayerFroms.NORMAL:
 		# Get current turning direction from input
 		var turn_direction = (-1 if _left_pressed else 0) + (1 if _right_pressed else 0)
 		if _reversed: turn_direction *= -1
@@ -236,7 +236,7 @@ func _is_during_hole() -> bool:
 func _get_point_offset() -> Vector2:
 	var point_offset: Vector2
 	match _current_form:
-		PLAYER_FORMS.SQUARE:
+		PlayerFroms.SQUARE:
 			point_offset = -(Vector2.from_angle(head_angle) * (_width/2.0))
 		_:
 			point_offset = Vector2.ZERO
@@ -274,26 +274,26 @@ func set_default_values() -> void:
 	_trail_on()
 
 func apply_power(power_id) -> void:
-	match power_id as Powerup.POWER:
-		Powerup.POWER.FAST:
+	match power_id as Powerup.Power:
+		Powerup.Power.FAST:
 			set_speed(_speed * 1.4)
-		Powerup.POWER.SLOW:
+		Powerup.Power.SLOW:
 			set_speed(_speed * 0.6)
-		Powerup.POWER.WIDE:
+		Powerup.Power.WIDE:
 			set_width(_width *1.4)
-		Powerup.POWER.THIN:
+		Powerup.Power.THIN:
 			set_width(_width * 0.6)
-		Powerup.POWER.SQUARE:
-			set_form(PLAYER_FORMS.SQUARE)
-		Powerup.POWER.CLEAR_TRAIL:
+		Powerup.Power.SQUARE:
+			set_form(PlayerFroms.SQUARE)
+		Powerup.Power.CLEAR_TRAIL:
 			delete_trail()
-		Powerup.POWER.INVINCIBLE:
+		Powerup.Power.INVINCIBLE:
 			_trail_off()
 			_invincible = true
-		Powerup.POWER.REVERSE:
+		Powerup.Power.REVERSE:
 			_reversed = true
 			_head_sprite.modulate = player_settings.reverse_color
-		Powerup.POWER.LOOP:
+		Powerup.Power.LOOP:
 			return
 
 ## Deletes all of the player's trail
@@ -318,7 +318,7 @@ func set_width(w: float, grace: bool = false) -> void:
 func set_speed(s: float) -> void:
 	_speed = s
 
-func set_form(player_form: PLAYER_FORMS) -> void:
+func set_form(player_form: PlayerFroms) -> void:
 	_current_form = player_form
 	# Disable all collision shapes
 	_head.find_child("Circle").set_deferred("disabled", true)
@@ -328,10 +328,10 @@ func set_form(player_form: PLAYER_FORMS) -> void:
 
 	# Turn on new form collision and change sprite
 	match player_form:
-		PLAYER_FORMS.NORMAL:
+		PlayerFroms.NORMAL:
 			_head_sprite.texture = CIRCLE_TEXTURE
 			_head.find_child("Circle").set_deferred("disabled", false)
-		PLAYER_FORMS.SQUARE:
+		PlayerFroms.SQUARE:
 			_head_sprite.texture = SQUARE_TEXTURE
 			_head.find_child("Square").set_deferred("disabled", false)
 	# update line after change form
@@ -376,7 +376,7 @@ func _get_inputs() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _alive: return
 
-	if _current_form == PLAYER_FORMS.SQUARE:
+	if _current_form == PlayerFroms.SQUARE:
 		var turn_direction = 0
 		if event.is_action_pressed("p%d_left" %(player_id+1), false): turn_direction = -1
 		elif event.is_action_pressed("p%d_right" %(player_id+1), false): turn_direction = 1
