@@ -17,6 +17,7 @@ const SPRITES_DIR: String = "res://assets/sprites/powerups/"
 @onready var circle_sprite: Sprite2D = $Circle
 @onready var power_sprite: Sprite2D = $Power
 
+# Powerup values =======
 @export var power_type: Type:
 	set(value):
 		power_type = value as Type
@@ -25,6 +26,8 @@ const SPRITES_DIR: String = "res://assets/sprites/powerups/"
 	set(value):
 		power_id = value as Power
 		if Engine.is_editor_hint(): _ready()
+@export var permanent: bool = false
+@export_range(0,100) var time: float = 7.0
 
 func _ready() -> void:
 	name = POWER_NAMES[power_id].capitalize()
@@ -34,6 +37,7 @@ func _ready() -> void:
 
 ## Called by player that obtained power
 func activate(player: Player) -> void:
-	obtained.emit(player.player_id, power_id, power_type)
+	var t: float = -1.0 if permanent else time
+	obtained.emit(player.player_id, power_id, power_type, t)
 	queue_free()
 	

@@ -44,3 +44,5 @@ z_index = -2
 
 [node name="Lines" type="Node2D" parent="TrailRoot"]
 z_index = -1
+
+[node name="TimersRoot" type="Node" parent="."]

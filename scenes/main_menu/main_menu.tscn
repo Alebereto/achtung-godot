@@ -1,3 +1,47 @@
-[gd_scene format=3 uid="uid://cgki18ujo4ujj"]
+[gd_scene load_steps=2 format=3 uid="uid://cgki18ujo4ujj"]
 
-[node name="MainMenu" type="Node2D"]
+[ext_resource type="Script" uid="uid://b1vfhrvefgg13" path="res://scenes/main_menu/main_menu.gd" id="1_fsom3"]
+
+[node name="MainMenu" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 100
+theme_override_constants/margin_top = 80
+theme_override_constants/margin_right = 100
+theme_override_constants/margin_bottom = 80
+script = ExtResource("1_fsom3")
+
+[node name="Main" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="Logo" type="Label" parent="Main"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 70
+text = "Achtung!"
+
+[node name="Start" type="Button" parent="Main"]
+layout_mode = 2
+text = "Start"
+
+[node name="Settings" type="Button" parent="Main"]
+layout_mode = 2
+text = "Settings"
+
+[node name="Quit" type="Button" parent="Main"]
+layout_mode = 2
+text = "Quit"
+
+[node name="Settings" type="HBoxContainer" parent="."]
+visible = false
+layout_mode = 2
+
+[connection signal="pressed" from="Main/Start" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="Main/Settings" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="Main/Quit" to="." method="_on_quit_pressed"]

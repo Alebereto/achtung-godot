@@ -1,7 +1,17 @@
-extends Node2D
+class_name Game extends Node2D
 
-@export_range(1,10) var _player_count: int = 2
-@export var _winning_score: int = 10
+#@export_range(1,10) var _player_count: int = 2
+#@export var _winning_score: int = 10
+
+class Settings:
+	# amount of players in game
+	var player_count: int = 2
+	# array of Player.Settings
+	var player_settings: Array
+	# score needed to win game
+	var winning_score: int = 10
+	
+var _game_settings: Settings = null
 
 var _player_scores: Array[int] = []
 var _alive: Array[bool] = []
@@ -9,10 +19,12 @@ var _alive: Array[bool] = []
 var _round_ended: bool = false
 var _game_ended: bool = false
 
-@onready var _arena: Node2D = $Arena
+@onready var _arena: Arena = $Arena
 @onready var _pause_menu: Control = $PauseMenu
 
 func _ready() -> void:
+	_game_settings = Globals.game_settings
+
 	_pause_menu.resume.connect(_on_pmenu_resume)
 	_pause_menu.quit.connect(_on_pmenu_quit)
 
@@ -22,8 +34,8 @@ func _ready() -> void:
 
 func _new_game() -> void:
 	_game_ended = false
-	_player_scores.resize(_player_count)
-	_alive.resize(_player_count)
+	_player_scores.resize(_game_settings.player_count)
+	_alive.resize(_game_settings.player_count)
 
 	_player_scores.fill(0)
 	_arena.new_game()
@@ -42,11 +54,11 @@ func _on_round_end() -> void:
 	# Check if there is a winner
 	var max_score: int = -1
 	var max_id: int = -1
-	for i in range(_player_count):
+	for i in range(_game_settings.player_count):
 		if _player_scores[i] >= max_score:
 			max_score = _player_scores[i]
 			max_id = i
-	if max_score >= _winning_score and _player_scores.count(max_score) == 1:
+	if max_score >= _game_settings.winning_score and _player_scores.count(max_score) == 1:
 		_on_game_over(max_id)
 
 func _on_game_over(winner_id: int) -> void:
@@ -70,6 +82,9 @@ func _toggle_pause() -> void:
 	else:
 		_pause()
 
+func _quit_to_menu() -> void:
+	get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn")
+
 # Arena Events
 # ============
 
@@ -78,7 +93,7 @@ func _on_player_crashed(crashed_id: int):
 
 	_alive[crashed_id] = false
 	# Add a point to players that are alive
-	for i in range(_player_count): if _alive[i]: _player_scores[i] += 1
+	for i in range(_game_settings.player_count): if _alive[i]: _player_scores[i] += 1
 	if _alive.count(true) <= 1: _on_round_end()
 
 # Pause menu inputs
@@ -88,8 +103,7 @@ func _on_pmenu_resume() -> void:
 	_resume()
 
 func _on_pmenu_quit() -> void:
-	# TODO quit
-	return
+	_quit_to_menu()
 
 # Inputs
 # ======

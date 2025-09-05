@@ -5,16 +5,20 @@ signal crashed(crasher_id: int, obstacle_id: int, is_player: bool)
 
 # Player settings used for editor only
 @export_group("Player Settings")
+@export var _edit_id: int = 0
 @export_color_no_alpha var _edit_trail_color: Color = Color.RED
 @export_range(0.0, 1500.0) var _edit_default_speed: float = 148.0
 @export_range(1.0, 1000.0) var _edit_default_width: float = 10.0
 @export_range(0.0, 10.0) var _edit_default_turn: float = 2.9
-@export var _edit_default_form: PlayerFroms = PlayerFroms.NORMAL
+@export var _edit_default_form: PlayerForms = PlayerForms.NORMAL
 @export_group("")
 
 class Settings:
-	const HOLE_DELAY := 3.5
-	const HOLE_LENGTH := 32.0
+	# hole length is width * hole_scale
+	const HOLE_SCALE: float = 3.0
+
+	# average time to create next hole
+	var hole_delay: float = 3.0
 
 	var name: String = "Player"
 	var trail_color: Color = Color.RED
@@ -24,20 +28,51 @@ class Settings:
 	var default_speed: float = 148.0
 	var default_width: float = 10.0
 	var default_turn_sharpness: float = 2.5
-	var default_player_from: PlayerFroms = PlayerFroms.NORMAL
+	var default_player_from: PlayerForms = PlayerForms.NORMAL
 
-enum PlayerFroms {NORMAL, SQUARE}
+	func _init() -> void:
+		var rng = RandomNumberGenerator.new()
+		trail_color = Color(rng.randf(), rng.randf(), rng.randf())
+
+class Powers:
+	const WIDE_SCALE: float = 1.4
+	const THIN_SCALE: float = 1.0/WIDE_SCALE
+	const FAST_SCALE: float = 1.4
+	const SLOW_SCALE: float = 1.0/FAST_SCALE
+
+	var counts: Array[int]
+
+	func _init():
+		var power_count: int = Powerup.Power.values().size()
+		counts.resize(power_count)
+		counts.fill(0)
+
+	## Clear all player powers
+	func clear():
+		counts.fill(0)
+
+	## Give player a power
+	func add(power_id):
+		counts[power_id] += 1
+	
+	## Remove power from player
+	func remove(power_id):
+		counts[power_id] = max(0, counts[power_id]-1)
+
+enum PlayerForms {NORMAL, SQUARE}
 
 @onready var _head_root: Node2D = $HeadRoot
 @onready var _head: Area2D = $HeadRoot/Head
 @onready var _head_sprite: Sprite2D = $HeadRoot/Head/HeadSprite
 @onready var _trail_collisions: Area2D = null
 @onready var _trail_lines_root: Node2D = $TrailRoot/Lines
+@onready var _timers_root: Node = $TimersRoot
 
 const CIRCLE_TEXTURE = preload("res://assets/sprites/player/circle.png")
 const SQUARE_TEXTURE = preload("res://assets/sprites/player/square.png")
 
 const SAFE_SELF_PERIOD = 0.2
+# width of head sprite
 const SPRITE_WIDTH = 32.0
 
 # inputs
@@ -47,7 +82,7 @@ var _right_pressed: bool = false
 
 # Player info
 # ===========
-@export var player_id: int = 0
+var player_id: int = 0
 var player_settings: Settings = null
 
 # time player has been alive
@@ -59,6 +94,8 @@ var _grace_period_stamp: float = -100.0
 # Player status
 # =============
 
+var _powers: Powers = null
+
 # speed of player (pixels/s)
 var _speed: float
 # width of player (in pixels)
@@ -67,15 +104,11 @@ var _width: float
 var _turn_sharpness: float
 
 # current form of the player
-var _current_form: PlayerFroms = PlayerFroms.NORMAL
+var _current_form: PlayerForms = PlayerForms.NORMAL
 # true if player is alive
 var _alive: bool = true
 # true if player leaves a trail
 var _leaves_trail: bool = true
-# true if controls are reversed
-var _reversed: bool = false
-# true if player is invincible
-var _invincible: bool = false
 # true if player cannot move
 var _frozen: bool = false
 
@@ -100,6 +133,7 @@ var _current_hole_length: float = 0
 
 
 func _ready() -> void:
+	_powers = Powers.new()
 	_reset_trail_root()
 	_head.set_meta("id", player_id)
 	_head.area_shape_entered.connect(_on_collision)
@@ -111,6 +145,7 @@ func _ready() -> void:
 		player_settings.default_width = _edit_default_width
 		player_settings.default_turn_sharpness = _edit_default_turn
 		player_settings.default_player_from = _edit_default_form
+		player_id = _edit_id
 		# TODO: add editor values for funzies
 
 	set_default_values()
@@ -151,10 +186,10 @@ func _reset_trail_root() -> void:
 ## returns Vector2 of the movement relative to previous position
 func _move(delta: float) -> Vector2:
 	# If normal mode then turn
-	if _current_form == PlayerFroms.NORMAL:
+	if _current_form == PlayerForms.NORMAL:
 		# Get current turning direction from input
 		var turn_direction = (-1 if _left_pressed else 0) + (1 if _right_pressed else 0)
-		if _reversed: turn_direction *= -1
+		if _is_reversed(): turn_direction *= -1
 		# turn head
 		_turn_head(turn_direction, delta)
 
@@ -188,8 +223,8 @@ func _start_line(update: bool = false) -> void:
 
 # Sets a new delay for next hole
 func _new_hole_delay() -> void:
-	#TODO: make delay random
-	_next_hole_delay = player_settings.HOLE_DELAY
+	var rng = RandomNumberGenerator.new()
+	_next_hole_delay = rng.randfn(player_settings.hole_delay)
 	_current_hole_length = 0.0
 
 ## Updates line after movement
@@ -199,10 +234,13 @@ func _leave_trail(delta: float, movement_vec: Vector2) -> void:
 	# update hole progress
 	var during_hole: bool = false
 	_next_hole_delay -= delta
+	# if during hole
 	if _next_hole_delay <= 0:
 		during_hole = true
 		_current_hole_length += dis
-		if _current_hole_length >= player_settings.HOLE_LENGTH:
+		# if hole should end
+		if _current_hole_length >= max(_width * player_settings.HOLE_SCALE,
+			player_settings.default_width * player_settings.HOLE_SCALE):
 			_new_hole_delay()
 			during_hole = false
 	
@@ -232,11 +270,17 @@ func _leave_trail(delta: float, movement_vec: Vector2) -> void:
 func _is_during_hole() -> bool:
 	return _next_hole_delay <= 0
 
+func _is_invincible() -> bool:
+	return _powers.counts[Powerup.Power.INVINCIBLE] > 0
+
+func _is_reversed() -> bool:
+	return _powers.counts[Powerup.Power.REVERSE] > 0
+
 ## Get offset of where line points should be added from head position
 func _get_point_offset() -> Vector2:
 	var point_offset: Vector2
 	match _current_form:
-		PlayerFroms.SQUARE:
+		PlayerForms.SQUARE:
 			point_offset = -(Vector2.from_angle(head_angle) * (_width/2.0))
 		_:
 			point_offset = Vector2.ZERO
@@ -254,53 +298,87 @@ func _trail_off() -> void:
 func _update_grace_stamp() -> void:
 	_grace_period_stamp = _time_alive
 
+# Powerups ======
+
+func _add_power_timed(power_id, time: float):
+	_powers.add(power_id)
+	# create timer to remove power later
+	var timer = Timer.new()
+	timer.wait_time = time
+	timer.one_shot = true
+	timer.autostart = true
+	timer.timeout.connect(func(): _on_timer_timeout(power_id, timer), CONNECT_ONE_SHOT)
+	# add timer to tree
+	_timers_root.add_child(timer)
+
+func _on_timer_timeout(power_id, timer: Timer):
+	_powers.remove(power_id)
+	_update_power_effects()
+	timer.queue_free()
+
+## Called when updating or removing powers
+func _update_power_effects() -> void:
+	# update width
+	set_width(player_settings.default_width * 
+	pow(_powers.WIDE_SCALE, _powers.counts[Powerup.Power.WIDE]) *
+	pow(_powers.THIN_SCALE, _powers.counts[Powerup.Power.THIN]))
+
+	# update speed
+	set_speed(player_settings.default_speed * 
+	pow(_powers.FAST_SCALE, _powers.counts[Powerup.Power.FAST]) *
+	pow(_powers.SLOW_SCALE, _powers.counts[Powerup.Power.SLOW]))
+
+	# Square start or end
+	if _powers.counts[Powerup.Power.SQUARE] > 0 and _current_form != PlayerForms.SQUARE:
+		set_form(PlayerForms.SQUARE)
+	if _powers.counts[Powerup.Power.SQUARE] == 0 and _current_form != PlayerForms.NORMAL:
+		set_form(PlayerForms.NORMAL)
+
+	# Invincible start or end
+	if _is_invincible() and _leaves_trail:
+		_trail_off()
+	if not _is_invincible() and not _leaves_trail:
+		_trail_on()
+	
+	# set head color
+	if _is_reversed():
+		_head_sprite.modulate = player_settings.reverse_color
+	else:
+		_head_sprite.modulate = player_settings.default_head_color
+	
+
 # Public functions
 # ================
 
 ## Return player to default state
 func set_default_values() -> void:
+	_powers.clear()
+	for child in _timers_root.get_children(): child.queue_free()
+	_alive = true
+	_frozen = false
 	_time_alive = 0.0
 	_grace_period_stamp = -100.0
-
+	_head_sprite.modulate = player_settings.default_head_color
 	set_width(player_settings.default_width)
 	_speed = player_settings.default_speed
 	_turn_sharpness = player_settings.default_turn_sharpness
-	_alive = true
-	_frozen = false
-	_reversed = false
-	_invincible = false
 	set_form(player_settings.default_player_from)
 	_new_hole_delay()
 	_trail_on()
 
-func apply_power(power_id) -> void:
+func apply_power(power_id, time: float = -1) -> void:
 	match power_id as Powerup.Power:
-		Powerup.Power.FAST:
-			set_speed(_speed * 1.4)
-		Powerup.Power.SLOW:
-			set_speed(_speed * 0.6)
-		Powerup.Power.WIDE:
-			set_width(_width *1.4)
-		Powerup.Power.THIN:
-			set_width(_width * 0.6)
-		Powerup.Power.SQUARE:
-			set_form(PlayerFroms.SQUARE)
 		Powerup.Power.CLEAR_TRAIL:
 			delete_trail()
-		Powerup.Power.INVINCIBLE:
-			_trail_off()
-			_invincible = true
-		Powerup.Power.REVERSE:
-			_reversed = true
-			_head_sprite.modulate = player_settings.reverse_color
-		Powerup.Power.LOOP:
-			return
+		_:
+			if (time < 0): _powers.add(power_id)
+			else: _add_power_timed(power_id, time)
+			_update_power_effects()
 
 ## Deletes all of the player's trail
 func delete_trail() -> void:
 	_current_line = null
 	_reset_trail_root()
-
 
 ## Kills player
 func die() -> void:
@@ -318,7 +396,7 @@ func set_width(w: float, grace: bool = false) -> void:
 func set_speed(s: float) -> void:
 	_speed = s
 
-func set_form(player_form: PlayerFroms) -> void:
+func set_form(player_form: PlayerForms) -> void:
 	_current_form = player_form
 	# Disable all collision shapes
 	_head.find_child("Circle").set_deferred("disabled", true)
@@ -328,10 +406,10 @@ func set_form(player_form: PlayerFroms) -> void:
 
 	# Turn on new form collision and change sprite
 	match player_form:
-		PlayerFroms.NORMAL:
+		PlayerForms.NORMAL:
 			_head_sprite.texture = CIRCLE_TEXTURE
 			_head.find_child("Circle").set_deferred("disabled", false)
-		PlayerFroms.SQUARE:
+		PlayerForms.SQUARE:
 			_head_sprite.texture = SQUARE_TEXTURE
 			_head.find_child("Square").set_deferred("disabled", false)
 	# update line after change form
@@ -350,7 +428,7 @@ func _on_collision(_area_RID, area: Area2D, area_shape_index: int, _lsi) -> void
 	if area is Powerup:
 		area.activate(self)
 	# check if player should die
-	elif not (_invincible or _is_during_hole()):
+	elif not (_is_invincible() or _is_during_hole()):
 		# if is a player or a trail
 		if area.has_meta("id"):
 			var other_id: int = area.get_meta("id")
@@ -376,11 +454,11 @@ func _get_inputs() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _alive: return
 
-	if _current_form == PlayerFroms.SQUARE:
+	if _current_form == PlayerForms.SQUARE:
 		var turn_direction = 0
 		if event.is_action_pressed("p%d_left" %(player_id+1), false): turn_direction = -1
 		elif event.is_action_pressed("p%d_right" %(player_id+1), false): turn_direction = 1
 		else: return
 
-		if _reversed: turn_direction *= -1
+		if _is_reversed(): turn_direction *= -1
 		_turn_head_sharp(turn_direction)
